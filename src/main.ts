@@ -2,7 +2,7 @@ import { launch } from "puppeteer-core";
 import App from "./XManHuaFetcher";
 
 const host: string = "https://www.xmanhua.com";
-const targetPath: string = '/25106xm/';
+const targetPath: string = "/25106xm/";
 
 (async () => {
     const app = new App(
@@ -11,9 +11,10 @@ const targetPath: string = '/25106xm/';
                 "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
             headless: false,
         })
-    );let resultMap: Map<string, string>|null = (await app.readEpisodeList(
+    );
+    let resultMap: Map<string, string> | null = await app.readEpisodeList(
         host + targetPath
-    ));
+    );
     if (resultMap == null) {
         console.error("无法获取漫画列表");
         return;
@@ -22,7 +23,7 @@ const targetPath: string = '/25106xm/';
         for (const EpisodeName of resultMap.keys()) {
             console.log(EpisodeName);
         }
-        console.log('');
+        console.log("");
     }
 
     app.newTask(resultMap);
