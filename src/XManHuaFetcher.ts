@@ -43,6 +43,7 @@ export default class App {
 
     _clearAllMangaFetcher(): void {
         for (const mangaFetcher of this._mangaFetcherPool) {
+            clearInterval(mangaFetcher._mangaFetcherMainLooper);
             mangaFetcher.page.close();
         }
         this._mangaFetcherPool.length = 0;
