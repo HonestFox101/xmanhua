@@ -1,1 +1,1 @@
-The default file placing manga
+The default dir placing manga
