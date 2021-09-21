@@ -1,6 +1,4 @@
-import { clear } from "console";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { exit } from "process";
 import { Browser, ElementHandle, HTTPResponse, Page } from "puppeteer-core";
 import { clearInterval } from "timers";
 
@@ -118,6 +116,7 @@ class MangaFetcher {
         if (saveDir.charAt(saveDir.length - 1) != "/") {
             saveDir += "/";
         }
+        // TODO: 处理目录不存在的情况
         this.saveDir = saveDir;
         this.host = host;
 
@@ -191,8 +190,8 @@ class MangaFetcher {
         // 创建一个点击器，它将以固定的周期点击漫画图像以跳转到下一页
         // TODO: 自定义_nextPageTimer周期
         this._nextPageClicker = setInterval(async (): Promise<void> => {
-            const selectedElement: string = "img#cp_image";
-            if ((await this.page.$(selectedElement)) == null) {
+            const selectedElementHandle: ElementHandle<Element>|null = await this.page.$("img#cp_image");
+            if (selectedElementHandle == null) {
                 console.warn("选择器未找到img#cp_image");
                 return;
             }
@@ -213,8 +212,10 @@ class MangaFetcher {
             await currentPageHandle.dispose();
 
             if (this._loadedImageNumbers.includes(this._currentPageNum)) {
-                await this.page.click(selectedElement, { delay: 1 });
+                await selectedElementHandle.click();
             }
+            selectedElementHandle.dispose();
+
             if (
                 this._loadedImageNumbers.length == this._totalPageCount &&
                 this._totalPageCount > 0

@@ -15,7 +15,7 @@ const targetPath: string = '/25106xm/';
         host + targetPath
     ));
     if (resultMap == null) {
-        console.error("无法获取漫画列表")
+        console.error("无法获取漫画列表");
         return;
     } else {
         console.log("找到以下的章节:");
