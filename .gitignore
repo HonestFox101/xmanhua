@@ -1,0 +1,6 @@
+/.vscode/
+/dist/
+/manga/*
+!/manga/readme.md
+**/node_modules/
+/package-lock.json
