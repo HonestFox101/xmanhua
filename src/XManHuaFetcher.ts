@@ -5,11 +5,17 @@ import { clearInterval } from "timers";
 export default class App {
     readonly browser: Browser;
     readonly _mainLooper: NodeJS.Timer;
+    readonly _host: string;
 
     _mangaFetcherPool: MangaFetcher[] = [];
 
-    constructor(browser: Browser, mainLooperCircleTime: number = 20000) {
+    constructor(
+        browser: Browser,
+        mainLooperCircleTime: number = 20000,
+        host: string = "https://www.xmanhua.com"
+    ) {
         this.browser = browser;
+        this._host = host;
         this._mainLooper = setInterval(async () => {
             const pages: Page[] = await this.browser.pages();
             console.log(`当前窗口:`);
@@ -18,26 +24,30 @@ export default class App {
                 if (title != "") {
                     console.log(await page.title());
                 } else if (pages.length <= 1) {
-                    clearInterval(this._mainLooper)
+                    clearInterval(this._mainLooper);
                     this.browser.close();
                 }
             }
-        
+
             this._mangaFetcherPool = this._mangaFetcherPool.filter(
                 (fetcher: MangaFetcher) => !fetcher.getTaskCompleted()
             );
-
         }, mainLooperCircleTime);
     }
 
     async newTask(
         task: Map<string, string>,
         mainTimerInterval: number = 5000,
-        saveDir: string = "./manga/",
-        host: string = "https://www.xmanhua.com"
+        saveDir: string = "./manga/"
     ): Promise<void> {
         this._mangaFetcherPool.push(
-            new MangaFetcher(await this.browser.newPage(), task, mainTimerInterval, saveDir, host)
+            new MangaFetcher(
+                await this.browser.newPage(),
+                task,
+                mainTimerInterval,
+                saveDir,
+                this._host
+            )
         );
     }
 
@@ -49,7 +59,8 @@ export default class App {
         this._mangaFetcherPool.length = 0;
     }
 
-    async readEpisodeList(url: string): Promise<Map<string, string> | null> {
+    async readEpisodeList(href: string): Promise<Map<string, string> | null> {
+        const url = this._host + href;
         const page: Page = await this.browser.newPage();
         await page.goto(url);
         const formItemHandles: ElementHandle<Element>[] = await page.$$(
@@ -69,7 +80,7 @@ export default class App {
                 )
             )
                 .replace(/\s/g, "")
-                .replace(/<span>.*<\/span>/g, "")
+                .replace(/<\/?span>/g, "")
                 .replace('"', "");
             const link: string = String(
                 await page.evaluate(
@@ -125,14 +136,14 @@ class MangaFetcher {
 
         this._mangaFetcherMainLooper = setInterval(() => {
             console.log(
-                `当前位置${this._currentPageNum}/${this._totalPageCount}`
+                `当前页码${this._currentPageNum}/${this._totalPageCount}`
             );
             console.log(`已加载图片:${this._loadedImageNumbers.toString()}`);
 
             if (!this._working && !this._taskCompleted) {
                 this._continueFetchingOneEpisode().then((flag: number) => {
                     if (flag != 0) {
-                        console.warn(`网页将关闭!代号:${flag}`);
+                        console.warn(`网页将关闭! 代号:${flag}`);
                         this.stop();
                         clearInterval(this._mangaFetcherMainLooper);
                     }
@@ -159,7 +170,7 @@ class MangaFetcher {
         this.page.on("response", async (resp: HTTPResponse): Promise<void> => {
             const url: string = resp.url();
             if (url.match(/^.+\/\d{1,3}_\d{4}\.(jpg|png)\??.*/g)) {
-                console.log("Fetching image:" + url);
+                console.log("捕获图片:" + url);
                 const fileName: string = url.match(
                     /\d{1,3}_\d{4}\.(jpg|png)/g
                 )![0];
@@ -178,6 +189,13 @@ class MangaFetcher {
         // 转到漫画阅读所在URL
         await this.page.goto(this.host + episodePath);
         // 获取漫画总页数，失败将返回!
+        // TODO: 当前 a.chapterpage 在未加载完成下将直接停止任务，为增加稳定性需要重构。
+        await ((sleepTime: number): Promise<null> =>
+            new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve(null);
+                }, sleepTime);
+            }))(1000); // 延迟一秒
         const pageListHandle: ElementHandle<Element>[] = await this.page.$$(
             "a.chapterpage"
         );
@@ -191,9 +209,10 @@ class MangaFetcher {
         // 创建一个点击器，它将以固定的周期点击漫画图像以跳转到下一页
         // TODO: 自定义_nextPageTimer周期
         this._nextPageClicker = setInterval(async (): Promise<void> => {
-            const selectedElementHandle: ElementHandle<Element>|null = await this.page.$("img#cp_image");
+            const selectedElementHandle: ElementHandle<Element> | null =
+                await this.page.$("img#cp_image");
             if (selectedElementHandle == null) {
-                console.warn("选择器未找到img#cp_image");
+                console.log("选择器没有定位到img#cp_image，图片未加载完成");
                 return;
             }
 
