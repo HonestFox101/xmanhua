@@ -1,5 +1,5 @@
 import { launch } from "puppeteer-core";
-import CopyMangaCrawler from "./copyMangaFetcher";
+import CopyMangaCrawler from "./copyMangaCrawler";
 
 const host: string = "https://copymanga.com";
 const targetHref: string = "/comic/yingfengongxueqingchuanshangyifu";
