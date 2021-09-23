@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { Browser, ElementHandle, HTTPResponse, Page } from "puppeteer-core";
 import { clearInterval } from "timers";
 
-export default class App {
+export default class XManHuaCrawler {
     readonly browser: Browser;
     readonly _mainLooper: NodeJS.Timer;
     readonly _host: string;
@@ -167,6 +167,7 @@ class MangaFetcher {
         if (!existsSync(saveDir)) {
             mkdirSync(saveDir);
         }
+        this.page.removeAllListeners();
         this.page.on("response", async (resp: HTTPResponse): Promise<void> => {
             const url: string = resp.url();
             if (url.match(/^.+\/\d{1,3}_\d{4}\.(jpg|png)\??.*/g)) {
@@ -202,9 +203,19 @@ class MangaFetcher {
         if (pageListHandle.length > 0) {
             this._totalPageCount = pageListHandle.length;
             console.log("本集总页数：" + pageListHandle.length);
+        } else if (episodeName.match(/[\(（]\d+p[\)）]/g)) {
+            this._totalPageCount = Number(
+                episodeName.match(/[\(（]\d+p[\)）]/g)![0].match(/\d+/)![0]
+            );
+            if (this._totalPageCount == NaN) {
+                console.error(`获取漫画页数失败！${episodeName}将被跳过`);
+                this._working = false;
+                return 0;
+            }
         } else {
-            console.error("获取漫画页数失败！");
-            return 2;
+            console.error(`获取漫画页数失败！${episodeName}将被跳过`);
+            this._working = false;
+            return 0;
         }
         // 创建一个点击器，它将以固定的周期点击漫画图像以跳转到下一页
         // TODO: 自定义_nextPageTimer周期
@@ -240,7 +251,6 @@ class MangaFetcher {
                 this._loadedImageNumbers.length == this._totalPageCount &&
                 this._totalPageCount > 0
             ) {
-                this.page.removeAllListeners();
                 this._currentPageNum = 0;
                 this._totalPageCount = 0;
                 this._loadedImageNumbers.length = 0;
@@ -256,6 +266,7 @@ class MangaFetcher {
     }
 
     stop(): void {
+        this.page.removeAllListeners();
         this._taskCompleted = true;
         if (!this.page.isClosed()) {
             this.page.close();
