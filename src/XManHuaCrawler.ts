@@ -37,8 +37,8 @@ export default class XManHuaCrawler {
 
     async newTask(
         task: Map<string, string>,
-        mainTimerInterval: number = 5000,
-        saveDir: string = "./manga/"
+        saveDir: string = "./manga/",
+        mainTimerInterval: number = 5000
     ): Promise<void> {
         this._mangaFetcherPool.push(
             new MangaFetcher(
