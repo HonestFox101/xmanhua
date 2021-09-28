@@ -74,7 +74,31 @@ export default class XManHuaCrawler {
 
         let resultMap: Map<string, string> = new Map();
 
-        const EpisodeIterator = (function* (length: number) {
+        for (let i = formItemHandles.length - 1; i >= 0; i--){
+            const elementHandle = formItemHandles[i];
+            const name: string = (
+                String(i + 1) +
+                "---" +
+                (await page.evaluate(
+                    (element: Element) => element.innerHTML,
+                    elementHandle
+                ))
+            )
+                .replace(/\s/g, "")
+                .replace(/<\/?span>/g, "")
+                .replace('"', "");
+            const link: string = String(
+                await page.evaluate(
+                    (element: Element) => element.getAttribute("href"),
+                    elementHandle
+                )
+            );
+            elementHandle.dispose();
+            resultMap.set(name, link);
+        }
+
+
+/*         const EpisodeIterator = (function* (length: number) {
             while (length > 1) {
                 yield length--;
             }
@@ -101,7 +125,7 @@ export default class XManHuaCrawler {
             );
             elementHandle.dispose();
             resultMap.set(name, link);
-        }
+        } */
 
         setTimeout(async () => {
             await page.close();
