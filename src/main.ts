@@ -21,5 +21,5 @@ function sliceMap<K,V>(map: Map<K, V>, start?: number, end?: number):Map<K,V> {
     
     const episodeMap = (await app.readEpisodeList(targetHref))!;
     
-    app.newTask(sliceMap(episodeMap,45));
+    app.newTask(sliceMap(episodeMap, 0, 9));
 })();
