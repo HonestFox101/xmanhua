@@ -1,7 +1,7 @@
 import { launch } from "puppeteer-core";
 import XManHuaCrawler from "./XManHuaCrawler";
 
-const targetHref: string = "/1237xm/";
+const targetHref: string = "/1474xm/";
 
 function sliceMap<K,V>(map: Map<K, V>, start?: number, end?: number):Map<K,V> {
     let resultEntries: [K,V][] = [];
@@ -21,5 +21,5 @@ function sliceMap<K,V>(map: Map<K, V>, start?: number, end?: number):Map<K,V> {
     
     const episodeMap = (await app.readEpisodeList(targetHref))!;
     
-    app.newTask(episodeMap);
+    app.newTask(sliceMap(episodeMap,45));
 })();

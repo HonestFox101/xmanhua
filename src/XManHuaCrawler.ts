@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { Browser, ElementHandle, HTTPResponse, Page } from "puppeteer-core";
+import { stringify } from "querystring";
 import { clearInterval } from "timers";
 
 export default class XManHuaCrawler {
@@ -72,12 +73,22 @@ export default class XManHuaCrawler {
         }
 
         let resultMap: Map<string, string> = new Map();
+
+        const EpisodeIterator = (function* (length: number) {
+            while (length > 1) {
+                yield length--;
+            }
+            return length;
+        })(formItemHandles.length);
+
         for (const elementHandle of formItemHandles) {
             const name: string = (
-                await page.evaluate(
+                String(EpisodeIterator.next().value) +
+                "---" +
+                (await page.evaluate(
                     (element: Element) => element.innerHTML,
                     elementHandle
-                )
+                ))
             )
                 .replace(/\s/g, "")
                 .replace(/<\/?span>/g, "")
