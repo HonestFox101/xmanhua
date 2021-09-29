@@ -77,7 +77,7 @@ export default class XManHuaCrawler {
         for (let i = formItemHandles.length - 1; i >= 0; i--){
             const elementHandle = formItemHandles[i];
             const name: string = (
-                String(i + 1) +
+                String(formItemHandles.length - i) +
                 "---" +
                 (await page.evaluate(
                     (element: Element) => element.innerHTML,
@@ -97,35 +97,6 @@ export default class XManHuaCrawler {
             resultMap.set(name, link);
         }
 
-
-/*         const EpisodeIterator = (function* (length: number) {
-            while (length > 1) {
-                yield length--;
-            }
-            return length;
-        })(formItemHandles.length);
-
-        for (const elementHandle of formItemHandles) {
-            const name: string = (
-                String(EpisodeIterator.next().value) +
-                "---" +
-                (await page.evaluate(
-                    (element: Element) => element.innerHTML,
-                    elementHandle
-                ))
-            )
-                .replace(/\s/g, "")
-                .replace(/<\/?span>/g, "")
-                .replace('"', "");
-            const link: string = String(
-                await page.evaluate(
-                    (element: Element) => element.getAttribute("href"),
-                    elementHandle
-                )
-            );
-            elementHandle.dispose();
-            resultMap.set(name, link);
-        } */
 
         setTimeout(async () => {
             await page.close();

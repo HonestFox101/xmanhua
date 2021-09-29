@@ -1,4 +1,5 @@
-import { Browser, ElementHandle, Page } from "puppeteer-core";
+import { Browser, ElementHandle, HTTPResponse, Page, EventEmitter } from "puppeteer-core";
+import * as https from 'https';
 
 export default class CopyMangaCrawler {
     readonly browser: Browser;
@@ -53,10 +54,48 @@ export default class CopyMangaCrawler {
     }
 }
 
-class CopyMangaFetcher {
+export class CopyMangaFetcher {
     readonly page: Page;
+    readonly task: Map<string, string>;
+    readonly host: string;
 
-    constructor(page: Page) {
+    _presentImageList: string[] = [];
+
+    constructor(page: Page, task:Map<string,string>, host:string = 'https://copymanga.com') {
         this.page = page;
+        this.task = task;
+        this.host = host;
+    }
+
+    async jumpToTargetEpisode(url: string) {
+        this.page.off("response", this._on_page_receipt_response);
+        this.page.on("response", this._on_page_receipt_response);
+        await this.page.goto(url);
+    }
+
+    async _on_page_receipt_response(resp: HTTPResponse): Promise<void> {
+        const url: string = resp.url();
+        if (url.match(/.+loading\.jpg/g)) {
+            const imgHandles: ElementHandle<Element>[] = await this.page.$$(".comicContent-list > li > img");
+            if (imgHandles.length == 0) {
+                console.error("选择器未定位到图片元素");
+                return;
+            }
+
+            this._presentImageList.length = imgHandles.length;
+            for (let i = 0; i < imgHandles.length; i++){
+                const imgHandle: ElementHandle<Element> = imgHandles[i];
+                const src: string = await this.page.evaluate((img: Element) => img.getAttribute("src")!, imgHandle)
+                this._presentImageList[i] = src;
+            }
+
+            console.log(this._presentImageList.toString());
+
+            this.page.off("response", this._on_page_receipt_response);
+        };
+    }
+
+    handleImage(url: string) {
+        
     }
 }
