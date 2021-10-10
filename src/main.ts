@@ -1,8 +1,7 @@
-import { Browser, launch, Page } from "puppeteer-core";
+import { Browser, launch } from "puppeteer-core";
 import XManHuaCrawler from "./XManHuaCrawler";
-import { CopyMangaFetcher } from "./copyMangaCrawler";
 
-const targetHref: string = "/577xm/";
+const targetHref: string = "/950xm/";
 
 function sliceMap<K, V>(
     map: Map<K, V>,
@@ -20,26 +19,12 @@ function sliceMap<K, V>(
     const app = new XManHuaCrawler(await launch(
         {
             executablePath: "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-            headless: true
+            headless: true 
         }
     ));
     
     const episodeMap = (await app.readEpisodeList(targetHref))!;
     
-    app.newTask(sliceMap(episodeMap, 70));
+    app.newTask(sliceMap(episodeMap,25));
 
-    /* const browser: Browser = await launch({
-        executablePath:
-            "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-        headless: true,
-    });
-    const page = await browser.newPage();
-    const fetcher: CopyMangaFetcher = new CopyMangaFetcher(
-        page,
-        new Map<string, string>()
-    );
-    await fetcher.jumpToTargetEpisode(
-        "https://copymanga.com/comic/modujingbingdenuli/chapter/52615840-10a4-11e9-b68d-00163e0ca5bd"
-    );
-    browser.close(); */
 })();
